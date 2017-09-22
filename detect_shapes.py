@@ -9,10 +9,22 @@ import cv2
 import os
 import numpy as np
 
+imgCounterSave = 0
+imgCounterShow = 0
+
+def showImage(name, img):
+	global imgCounterShow
+	imgCounterShow += 1
+	cv2.imshow(str(imgCounterShow)+" "+name, img)
+
 def saveImage(directory, name, img):
-	if not os.path.exists(directory):
-		os.makedirs(directory)
-	cv2.imwrite("./"+directory+"/"+name+'.jpeg',img)
+	showImage(name,img)
+	global imgCounterSave
+	imgCounterSave += 1
+	if not os.path.exists("../"+directory):
+		os.makedirs("../"+directory)
+	cv2.imwrite("../"+directory+"/"+str(imgCounterSave)+" "+name+'.jpeg',img)
+
 
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
@@ -25,27 +37,24 @@ directory = args['image'].split('.')[0]
 # the shapes can be approximated better
 image = cv2.imread(args["image"])
 resized = imutils.resize(image, width=300)
-cv2.imshow("Image resized", resized)
 saveImage(directory,"resized",resized)
 ratio = image.shape[0] / float(resized.shape[0])
 
 # convert the resized image to grayscale, blur it slightly,
 # and threshold it
 gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
-cv2.imshow("Image gray", gray)
 saveImage(directory,"gray",gray)
 blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-cv2.imshow("Image blurred", blurred)
 saveImage(directory,"blurred",blurred)
 # thresh = cv2.threshold(blurred, 135, 255, cv2.THRESH_BINARY)[1]
 thresh = cv2.threshold(gray, 170, 255, cv2.THRESH_BINARY)[1]
-cv2.imshow("Image thresh", thresh)
 saveImage(directory,"thresh",thresh)
 inverted = cv2.bitwise_not(thresh);
-cv2.imshow("Image inve", inverted)
 saveImage(directory,"inverted",inverted)
 # find contours in the thresholded image and initialize the
 # shape detector 
+saveImage(directory,"original",image)
+
 # Miguel: Initially the thresh
 cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL,
 	cv2.CHAIN_APPROX_SIMPLE)
@@ -69,36 +78,40 @@ for c in cnts:
 
 		# mask defaulting to black for 3-channel and transparent for 4-channel
 		# (of course replace corners with yours)
-		mask = np.zeros(image.shape, dtype=np.uint8)
-		cv2.imshow("mask"+str(i), mask)
-		cv2.imshow("image"+str(i), image)
+		maskIni = np.zeros(image.shape, dtype=np.uint8)
+		mask = maskIni
+		saveImage(directory,"maskInitialize"+str(i),maskIni)
 
 		# roi_corners = np.array([[(10,10), (200,200), (10,200)]], dtype=np.int32)
 		roi_corners = np.array([[tuple(tup) for el in [y * ratio for y in c] for tup in el]], dtype=np.int32)
 		# fill the ROI so it doesn't get wiped out when the mask is applied
-		# channel_count = image.shape[2]  # i.e. 3 or 4 depending on your image
-		# ignore_mask_color = (255,)*channel_count
+		# channel_count2 = image.shape[1]  # i.e. 3 or 4 depending on your image
+		# ignore_mask_color = (255,)*channel_count3
+		# cv2.fillPoly(mask, roi_corners, ignore_mask_color)
+		# showImage("maskAgain"+str(i), mask)
+
 		white = (255, 255, 255)
 		cv2.fillPoly(mask, roi_corners, white)
-		cv2.imshow("maskAgain"+str(i), mask)
+		saveImage(directory,"mask"+str(i),mask)
 
 		# apply the mask
-		masked_image_bit = cv2.bitwise_and(image, mask)
-		cv2.imshow("mask.bitand.image"+str(i), masked_image_bit)
+		masked_image_bit = cv2.bitwise_and(image, maskIni)
 		saveImage(directory,"mask.bitand.image"+str(i),masked_image_bit)
+		
 		blurred_mask_image_bit = cv2.GaussianBlur(masked_image_bit,(23, 23), 10)
-		cv2.imshow("blurred_maskimgbit"+str(i), blurred_mask_image_bit)
 		saveImage(directory,"blurred_maskimgbit"+str(i),blurred_mask_image_bit)
-		masked_image = cv2.add(image, mask)
-		cv2.imshow("mask.add.image"+str(i), masked_image)
+		
+		masked_image = cv2.add(image, maskIni)
 		saveImage(directory,"mask.add.image"+str(i),masked_image)
-		cv2.imshow("inverted?", cv2.bitwise_not(blurred_mask_image_bit))
+
+		invBlurMask = cv2.bitwise_not(blurred_mask_image_bit)
+		saveImage(directory,"invertedBlurredMask"+str(i),invBlurMask)
+		
 		masked_img_xor = cv2.bitwise_xor(masked_image, blurred_mask_image_bit)
-		cv2.imshow("mask.xor.image"+str(i),masked_img_xor)
 		saveImage(directory,"mask.xor.image"+str(i),masked_img_xor)
 
 		# img1_bg = cv2.bitwise_and(roi_corners,roi_corners,masked_image)
-		# cv2.imshow("bitwise", img1_bg)
+		# showImage("bitwise", img1_bg)
 		# result = blurred_mask / image
 		# saveImage(directory,"resultMinus"+str(i),result)
 
@@ -120,7 +133,6 @@ for c in cnts:
 
 
 # show the output image
-cv2.imshow("Image", image)
-saveImage(directory,"final",image)
+saveImage(directory,"Final",image)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
