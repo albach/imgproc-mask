@@ -98,20 +98,38 @@ for c in cnts:
 		masked_image_bit = cv2.bitwise_and(image, maskIni)
 		saveImage(directory,"mask.bitwise.and.image"+str(i),masked_image_bit)
 		
+		masked_image_bit_not = cv2.bitwise_not(masked_image_bit)
+		saveImage(directory,"mask.bitwise.not.image"+str(i),masked_image_bit_not)
+
+		blurred_mask_image_bit_not = cv2.GaussianBlur(masked_image_bit_not,(23, 23), 10)
+		saveImage(directory,"blurred_maskimgbit_not"+str(i),blurred_mask_image_bit_not)
+
 		blurred_mask_image_bit = cv2.GaussianBlur(masked_image_bit,(23, 23), 10)
 		saveImage(directory,"blurred_maskimgbit"+str(i),blurred_mask_image_bit)
 		
 		blurMask_add_img = cv2.add(image,blurred_mask_image_bit)
 		saveImage(directory,"blurmask.add.image"+str(i),blurMask_add_img)
 
+		blurMaskNot_add_img = cv2.add(image,blurred_mask_image_bit_not)
+		saveImage(directory,"blurmaskNot.add.image"+str(i),blurMaskNot_add_img)
+
 		mask_add_img = cv2.add(image, maskIni)
 		saveImage(directory,"mask.add.image"+str(i),mask_add_img)
 
 		invBlurMask = cv2.bitwise_not(blurred_mask_image_bit)
 		saveImage(directory,"invertedBlurredMask"+str(i),invBlurMask)
+
+		invBlurMask = cv2.bitwise_not(blurred_mask_image_bit)
+		saveImage(directory,"invertedBlurredMask_bit_not"+str(i),invBlurMask)
+
+		invBlurMask_not = cv2.bitwise_not(blurred_mask_image_bit_not)
+		saveImage(directory,"invertedBlurredNotMask_bit_not"+str(i),invBlurMask_not)
 		
 		masked_img_xor = cv2.bitwise_xor(mask_add_img, blurred_mask_image_bit)
 		saveImage(directory,"mask.xor.image"+str(i),masked_img_xor)
+
+		masked_not_xor_img = cv2.bitwise_xor(image, invBlurMask_not)
+		saveImage(directory,"maskNot.xor.image"+str(i),masked_not_xor_img)
 
 		# img1_bg = cv2.bitwise_and(roi_corners,roi_corners,masked_image)
 		# showImage("bitwise", img1_bg)
