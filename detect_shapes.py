@@ -96,18 +96,21 @@ for c in cnts:
 
 		# apply the mask
 		masked_image_bit = cv2.bitwise_and(image, maskIni)
-		saveImage(directory,"mask.bitand.image"+str(i),masked_image_bit)
+		saveImage(directory,"mask.bitwise.and.image"+str(i),masked_image_bit)
 		
 		blurred_mask_image_bit = cv2.GaussianBlur(masked_image_bit,(23, 23), 10)
 		saveImage(directory,"blurred_maskimgbit"+str(i),blurred_mask_image_bit)
 		
-		masked_image = cv2.add(image, maskIni)
-		saveImage(directory,"mask.add.image"+str(i),masked_image)
+		blurMask_add_img = cv2.add(image,blurred_mask_image_bit)
+		saveImage(directory,"blurmask.add.image"+str(i),blurMask_add_img)
+
+		mask_add_img = cv2.add(image, maskIni)
+		saveImage(directory,"mask.add.image"+str(i),mask_add_img)
 
 		invBlurMask = cv2.bitwise_not(blurred_mask_image_bit)
 		saveImage(directory,"invertedBlurredMask"+str(i),invBlurMask)
 		
-		masked_img_xor = cv2.bitwise_xor(masked_image, blurred_mask_image_bit)
+		masked_img_xor = cv2.bitwise_xor(mask_add_img, blurred_mask_image_bit)
 		saveImage(directory,"mask.xor.image"+str(i),masked_img_xor)
 
 		# img1_bg = cv2.bitwise_and(roi_corners,roi_corners,masked_image)
