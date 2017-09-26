@@ -76,7 +76,7 @@ for c in cnts:
 			cX = int((M["m10"] / M["m00"]) * ratio)
 			cY = int((M["m01"] / M["m00"]) * ratio)
 		shape = sd.detect(c)
-		if shape == "rectangle":
+		if shape:
 			peri = cv2.arcLength(c, True)
 
 			# mask defaulting to black for 3-channel and transparent for 4-channel
@@ -156,9 +156,13 @@ for c in cnts:
 			c = c.astype("float")
 			c *= ratio
 			c = c.astype("int")
-			cv2.drawContours(image, [c], -1, (0, 255, 0), 1)
-			cv2.putText(image, shape, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
-				0.5, (255, 255, 255), 2)
+			rect = cv2.minAreaRect(c)
+			box = cv2.boxPoints(rect)
+			box = np.int0(box)
+			cv2.drawContours(image, [box],0,(0,0,255),2)
+			# cv2.drawContours(image, [c], -1, (0, 255, 0), 1)
+			# cv2.putText(image, str(shape), (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
+			# 	0.5, (0, 0, 0), 2)
 	i+=1
 
 
