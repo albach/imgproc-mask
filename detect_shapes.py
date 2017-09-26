@@ -157,12 +157,13 @@ for c in cnts:
 			c *= ratio
 			c = c.astype("int")
 			rect = cv2.minAreaRect(c)
+			area = cv2.contourArea(c)
 			box = cv2.boxPoints(rect)
 			box = np.int0(box)
 			cv2.drawContours(image, [box],0,(0,0,255),2)
 			# cv2.drawContours(image, [c], -1, (0, 255, 0), 1)
-			# cv2.putText(image, str(shape), (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
-			# 	0.5, (0, 0, 0), 2)
+			cv2.putText(image, str(area), (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
+				0.5, (0, 0, 0), 1)
 	i+=1
 
 
