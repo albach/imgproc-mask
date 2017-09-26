@@ -11,6 +11,8 @@ import numpy as np
 
 imgCounterSave = 0
 imgCounterShow = 0
+global directory
+directory = ''
 
 def showImage(name, img):
 	global imgCounterShow
@@ -18,7 +20,7 @@ def showImage(name, img):
 	cv2.imshow(str(imgCounterShow)+" "+name, img)
 
 def saveImage(directory, name, img):
-	showImage(name,img)
+	# showImage(name,img)
 	global imgCounterSave
 	imgCounterSave += 1
 	if not os.path.exists("../"+directory):
@@ -47,7 +49,7 @@ saveImage(directory,"gray",gray)
 blurred = cv2.GaussianBlur(gray, (5, 5), 0)
 saveImage(directory,"blurred",blurred)
 # thresh = cv2.threshold(blurred, 135, 255, cv2.THRESH_BINARY)[1]
-thresh = cv2.threshold(gray, 170, 255, cv2.THRESH_BINARY)[1]
+thresh = cv2.threshold(gray, 165, 255, cv2.THRESH_BINARY)[1]
 saveImage(directory,"thresh",thresh)
 inverted = cv2.bitwise_not(thresh);
 saveImage(directory,"inverted",inverted)
@@ -65,7 +67,7 @@ i = 0
 for c in cnts:
 	# compute the center of the contour, then detect the name of the
 	# shape using only the contour
-	if i==23:
+	if i:
 		M = cv2.moments(c)
 		# print(M)
 		cX = 0
@@ -74,82 +76,89 @@ for c in cnts:
 			cX = int((M["m10"] / M["m00"]) * ratio)
 			cY = int((M["m01"] / M["m00"]) * ratio)
 		shape = sd.detect(c)
-		peri = cv2.arcLength(c, True)
+		if shape == "rectangle":
+			peri = cv2.arcLength(c, True)
 
-		# mask defaulting to black for 3-channel and transparent for 4-channel
-		# (of course replace corners with yours)
-		maskIni = np.zeros(image.shape, dtype=np.uint8)
-		mask = maskIni
-		saveImage(directory,"maskInitialize"+str(i),maskIni)
+			# mask defaulting to black for 3-channel and transparent for 4-channel
+			# (of course replace corners with yours)
+			maskIni = np.zeros(image.shape, dtype=np.uint8)
+			mask = maskIni
+			# saveImage(directory,"maskInitialize"+str(i),maskIni)
 
-		# roi_corners = np.array([[(10,10), (200,200), (10,200)]], dtype=np.int32)
-		roi_corners = np.array([[tuple(tup) for el in [y * ratio for y in c] for tup in el]], dtype=np.int32)
-		# fill the ROI so it doesn't get wiped out when the mask is applied
-		# channel_count2 = image.shape[1]  # i.e. 3 or 4 depending on your image
-		# ignore_mask_color = (255,)*channel_count3
-		# cv2.fillPoly(mask, roi_corners, ignore_mask_color)
-		# showImage("maskAgain"+str(i), mask)
+			# roi_corners = np.array([[(10,10), (200,200), (10,200)]], dtype=np.int32)
+			roi_corners = np.array([[tuple(tup) for el in [y * ratio for y in c] for tup in el]], dtype=np.int32)
+			# fill the ROI so it doesn't get wiped out when the mask is applied
+			# channel_count2 = image.shape[1]  # i.e. 3 or 4 depending on your image
+			# ignore_mask_color = (255,)*channel_count3
+			# cv2.fillPoly(mask, roi_corners, ignore_mask_color)
+			# showImage("maskAgain"+str(i), mask)
 
-		white = (255, 255, 255)
-		cv2.fillPoly(mask, roi_corners, white)
-		saveImage(directory,"mask"+str(i),mask)
+			white = (255, 255, 255)
+			cv2.fillPoly(mask, roi_corners, white)
+			# saveImage(directory,"mask"+str(i),mask)
 
-		# apply the mask
-		masked_image_bit = cv2.bitwise_and(image, maskIni)
-		saveImage(directory,"mask.bitwise.and.image"+str(i),masked_image_bit)
-		
-		masked_image_bit_not = cv2.bitwise_not(masked_image_bit)
-		saveImage(directory,"mask.bitwise.not.image"+str(i),masked_image_bit_not)
+			# apply the mask
+			masked_image_bit = cv2.bitwise_and(image, maskIni)
+			# saveImage(directory,"mask.bitwise.and.image"+str(i),masked_image_bit)
+			
+			# masked_image_bit_not = cv2.bitwise_not(masked_image_bit)
+			# saveImage(directory,"mask.bitwise.not.image"+str(i),masked_image_bit_not)
 
-		blurred_mask_image_bit_not = cv2.GaussianBlur(masked_image_bit_not,(23, 23), 10)
-		saveImage(directory,"blurred_maskimgbit_not"+str(i),blurred_mask_image_bit_not)
+			# blurred_mask_image_bit_not = cv2.GaussianBlur(masked_image_bit_not,(23, 23), 10)
+			# saveImage(directory,"blurred_maskimgbit_not"+str(i),blurred_mask_image_bit_not)
 
-		blurred_mask_image_bit = cv2.GaussianBlur(masked_image_bit,(23, 23), 10)
-		saveImage(directory,"blurred_maskimgbit"+str(i),blurred_mask_image_bit)
-		
-		blurMask_add_img = cv2.add(image,blurred_mask_image_bit)
-		saveImage(directory,"blurmask.add.image"+str(i),blurMask_add_img)
+			blurred_mask_image_bit = cv2.GaussianBlur(masked_image_bit,(23, 23), 10)
+			# saveImage(directory,"blurred_maskimgbit"+str(i),blurred_mask_image_bit)
+			
+			blurMask_add_img = cv2.add(image,blurred_mask_image_bit)
+			saveImage(directory,"blurmask.add.image"+str(i),blurMask_add_img)
 
-		blurMaskNot_add_img = cv2.add(image,blurred_mask_image_bit_not)
-		saveImage(directory,"blurmaskNot.add.image"+str(i),blurMaskNot_add_img)
+			# blurMaskNot_add_img = cv2.add(image,blurred_mask_image_bit_not)
+			# saveImage(directory,"blurmaskNot.add.image"+str(i),blurMaskNot_add_img)
 
-		mask_add_img = cv2.add(image, maskIni)
-		saveImage(directory,"mask.add.image"+str(i),mask_add_img)
+			mask_add_img = cv2.add(image, maskIni)
+			saveImage(directory,"mask.add.image"+str(i),mask_add_img)
 
-		invBlurMask = cv2.bitwise_not(blurred_mask_image_bit)
-		saveImage(directory,"invertedBlurredMask"+str(i),invBlurMask)
+			# invBlurMask = cv2.bitwise_not(blurred_mask_image_bit)
+			# saveImage(directory,"invertedBlurredMask"+str(i),invBlurMask)
 
-		invBlurMask = cv2.bitwise_not(blurred_mask_image_bit)
-		saveImage(directory,"invertedBlurredMask_bit_not"+str(i),invBlurMask)
+			#add blurred mask with content to original image with white space
+			# maskImg_add_blurImag = cv2.add(mask_add_img, invBlurMask)
+			# saveImage(directory,"img.mask.add.blurImg"+str(), maskImg_add_blurImag)
 
-		invBlurMask_not = cv2.bitwise_not(blurred_mask_image_bit_not)
-		saveImage(directory,"invertedBlurredNotMask_bit_not"+str(i),invBlurMask_not)
-		
-		masked_img_xor = cv2.bitwise_xor(mask_add_img, blurred_mask_image_bit)
-		saveImage(directory,"mask.xor.image"+str(i),masked_img_xor)
+			# invBlurMask = cv2.bitwise_not(blurred_mask_image_bit)
+			# saveImage(directory,"invertedBlurredMask_bit_not"+str(i),invBlurMask)
 
-		masked_not_xor_img = cv2.bitwise_xor(image, invBlurMask_not)
-		saveImage(directory,"maskNot.xor.image"+str(i),masked_not_xor_img)
+			# invBlurMask_not = cv2.bitwise_not(blurred_mask_image_bit_not)
+			# saveImage(directory,"invertedBlurredNotMask_bit_not"+str(i),invBlurMask_not)
+			
+			# masked_img_xor = cv2.bitwise_xor(mask_add_img, blurred_mask_image_bit)
+			# saveImage(directory,"mask.xor.image"+str(i),masked_img_xor)
 
-		# img1_bg = cv2.bitwise_and(roi_corners,roi_corners,masked_image)
-		# showImage("bitwise", img1_bg)
-		# result = blurred_mask / image
-		# saveImage(directory,"resultMinus"+str(i),result)
+			image = mask_add_img
 
-		# save the result
-		# saveImage(directory,"masked"+str(i),masked_image)
-		# (x, y, w, h) = cv2.boundingRect(cv2.approxPolyDP(c, 0.04 * peri, True))
-		# print("and this?: ", list(zip(*c)))
-		# print('whats this?', [tuple(tup) for el in c for tup in el])
-		# print('shape: ',tuple(c))
-		# multiply the contour (x, y)-coordinates by the resize ratio,
-		# then draw the contours and the name of the shape on the image
-		c = c.astype("float")
-		c *= ratio
-		c = c.astype("int")
-		cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
-		cv2.putText(image, shape, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
-			0.5, (255, 255, 255), 2)
+			# masked_not_xor_img = cv2.bitwise_or(mask_add_img, invBlurMask_not)
+			# saveImage(directory,"maskNot.xor.image"+str(i),masked_not_xor_img)
+
+			# img1_bg = cv2.bitwise_and(roi_corners,roi_corners,masked_image)
+			# showImage("bitwise", img1_bg)
+			# result = blurred_mask / image
+			# saveImage(directory,"resultMinus"+str(i),result)
+
+			# save the result
+			# saveImage(directory,"masked"+str(i),masked_image)
+			# (x, y, w, h) = cv2.boundingRect(cv2.approxPolyDP(c, 0.04 * peri, True))
+			# print("and this?: ", list(zip(*c)))
+			# print('whats this?', [tuple(tup) for el in c for tup in el])
+			# print('shape: ',tuple(c))
+			# multiply the contour (x, y)-coordinates by the resize ratio,
+			# then draw the contours and the name of the shape on the image
+			c = c.astype("float")
+			c *= ratio
+			c = c.astype("int")
+			cv2.drawContours(image, [c], -1, (0, 255, 0), 1)
+			cv2.putText(image, shape, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
+				0.5, (255, 255, 255), 2)
 	i+=1
 
 
