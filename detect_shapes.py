@@ -49,7 +49,9 @@ saveImage(directory,"gray",gray)
 blurred = cv2.GaussianBlur(gray, (5, 5), 0)
 saveImage(directory,"blurred",blurred)
 # thresh = cv2.threshold(blurred, 135, 255, cv2.THRESH_BINARY)[1]
-thresh = cv2.threshold(gray, 165, 255, cv2.THRESH_BINARY)[1]
+# thresh = cv2.threshold(gray, 165, 255, cv2.THRESH_BINARY)[1]
+thresh = cv2.adaptiveThreshold(gray,  255, cv2.ADAPTIVE_THRESH_MEAN_C,
+	cv2.THRESH_BINARY_INV, 11, 7)[1]
 saveImage(directory,"thresh",thresh)
 inverted = cv2.bitwise_not(thresh);
 saveImage(directory,"inverted",inverted)
@@ -72,11 +74,24 @@ for c in cnts:
 		# print(M)
 		cX = 0
 		cY = 0
-		if M["m00"] != float(0) and M["m00"] != float(0):
+		if M["m00"] != float(0):
 			cX = int((M["m10"] / M["m00"]) * ratio)
 			cY = int((M["m01"] / M["m00"]) * ratio)
+		
 		shape = sd.detect(c)
-		if shape:
+		
+		# c = c.astype("float")
+		# c *= ratio
+		# c = c.astype("int")
+
+		rect = cv2.minAreaRect(c)
+		# area = cv2.contourArea(c)
+		# areaMoments = M["m00"]
+		# box = cv2.boxPoints(rect)
+		# box = np.int0(box)
+		# print("area {} - areaMoment {}".format(area, areaMoments))
+		# if shape:
+		if M["m00"] >=400 and M["m00"] <= 1000 :
 			peri = cv2.arcLength(c, True)
 
 			# mask defaulting to black for 3-channel and transparent for 4-channel
@@ -95,11 +110,11 @@ for c in cnts:
 
 			white = (255, 255, 255)
 			cv2.fillPoly(mask, roi_corners, white)
-			# saveImage(directory,"mask"+str(i),mask)
+			saveImage(directory,"mask"+str(i),mask)
 
 			# apply the mask
 			masked_image_bit = cv2.bitwise_and(image, maskIni)
-			# saveImage(directory,"mask.bitwise.and.image"+str(i),masked_image_bit)
+			saveImage(directory,"mask.bitwise.and.image"+str(i),masked_image_bit)
 			
 			# masked_image_bit_not = cv2.bitwise_not(masked_image_bit)
 			# saveImage(directory,"mask.bitwise.not.image"+str(i),masked_image_bit_not)
@@ -162,7 +177,7 @@ for c in cnts:
 			box = np.int0(box)
 			cv2.drawContours(image, [box],0,(0,0,255),2)
 			# cv2.drawContours(image, [c], -1, (0, 255, 0), 1)
-			cv2.putText(image, str(area), (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
+			cv2.putText(image, str(M["m00"]), (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 
 				0.5, (0, 0, 0), 1)
 	i+=1
 
