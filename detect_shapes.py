@@ -50,8 +50,7 @@ blurred = cv2.GaussianBlur(gray, (5, 5), 0)
 saveImage(directory,"blurred",blurred)
 # thresh = cv2.threshold(blurred, 135, 255, cv2.THRESH_BINARY)[1]
 # thresh = cv2.threshold(gray, 165, 255, cv2.THRESH_BINARY)[1]
-thresh = cv2.adaptiveThreshold(gray,  255, cv2.ADAPTIVE_THRESH_MEAN_C,
-	cv2.THRESH_BINARY_INV, 11, 7)[1]
+thresh = cv2.adaptiveThreshold(gray, 255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,11,2)
 saveImage(directory,"thresh",thresh)
 inverted = cv2.bitwise_not(thresh);
 saveImage(directory,"inverted",inverted)
@@ -91,7 +90,8 @@ for c in cnts:
 		# box = np.int0(box)
 		# print("area {} - areaMoment {}".format(area, areaMoments))
 		# if shape:
-		if M["m00"] >=400 and M["m00"] <= 1000 :
+		# if M["m00"] >=400 and M["m00"] <= 1000 :
+		if M:
 			peri = cv2.arcLength(c, True)
 
 			# mask defaulting to black for 3-channel and transparent for 4-channel
