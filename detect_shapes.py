@@ -50,7 +50,8 @@ blurred = cv2.GaussianBlur(gray, (5, 5), 0)
 saveImage(directory,"blurred",blurred)
 # thresh = cv2.threshold(blurred, 135, 255, cv2.THRESH_BINARY)[1]
 # thresh = cv2.threshold(gray, 165, 255, cv2.THRESH_BINARY)[1]
-thresh = cv2.adaptiveThreshold(gray, 255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,11,2)
+# thresh = cv2.adaptiveThreshold(gray, 255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY_INV,11,2)
+thresh = cv2.adaptiveThreshold(gray,255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,11,2)
 saveImage(directory,"thresh",thresh)
 inverted = cv2.bitwise_not(thresh);
 saveImage(directory,"inverted",inverted)
@@ -90,8 +91,8 @@ for c in cnts:
 		# box = np.int0(box)
 		# print("area {} - areaMoment {}".format(area, areaMoments))
 		# if shape:
-		# if M["m00"] >=400 and M["m00"] <= 1000 :
-		if M:
+		if M["m00"] >=400 and M["m00"] <= 1000 :
+		# if M:
 			peri = cv2.arcLength(c, True)
 
 			# mask defaulting to black for 3-channel and transparent for 4-channel
@@ -172,9 +173,13 @@ for c in cnts:
 			c *= ratio
 			c = c.astype("int")
 			rect = cv2.minAreaRect(c)
-			area = cv2.contourArea(c)
+			# area = cv2.contourArea(c)
 			box = cv2.boxPoints(rect)
 			box = np.int0(box)
+
+			ret = cv2.matchShapes(rect,c,1,0.0)
+			print("Match Shape value: {} ".format(ret))			
+
 			cv2.drawContours(image, [box],0,(0,0,255),2)
 			# cv2.drawContours(image, [c], -1, (0, 255, 0), 1)
 			cv2.putText(image, str(M["m00"]), (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 
