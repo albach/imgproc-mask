@@ -177,7 +177,7 @@ for c in cnts:
 			box = cv2.boxPoints(rect)
 			box = np.int0(box)
 
-			ret = cv2.matchShapes(rect,c,1,0.0)
+			ret = cv2.matchShapes(box,c,1,0.0)
 			print("Match Shape value: {} ".format(ret))			
 
 			cv2.drawContours(image, [box],0,(0,0,255),2)
