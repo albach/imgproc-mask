@@ -70,6 +70,18 @@ for c in cnts:
 	# compute the center of the contour, then detect the name of the
 	# shape using only the contour
 	if i:
+		c2 = c
+		c2 = c2.astype("float")
+		c2 *= ratio
+		c2 = c2.astype("int")
+		rect = cv2.minAreaRect(c2)
+		# area = cv2.contourArea(c)
+		box = cv2.boxPoints(rect)
+		box = np.int0(box)
+
+		ret = cv2.matchShapes(box,c2,1,0.0)
+		print("Match Shape value: {} ".format(ret))
+
 		M = cv2.moments(c)
 		# print(M)
 		cX = 0
@@ -91,10 +103,11 @@ for c in cnts:
 		# box = np.int0(box)
 		# print("area {} - areaMoment {}".format(area, areaMoments))
 		# if shape:
-		if M["m00"] >=400 and M["m00"] <= 1000 :
+		
+		if ret<= 0.18 and M["m00"] >=400 and M["m00"] <= 1000 :
 		# if M:
-			peri = cv2.arcLength(c, True)
-
+			# peri = cv2.arcLength(c, True)
+			print("HOla/?")
 			# mask defaulting to black for 3-channel and transparent for 4-channel
 			# (of course replace corners with yours)
 			maskIni = np.zeros(image.shape, dtype=np.uint8)
@@ -168,22 +181,12 @@ for c in cnts:
 			# print('whats this?', [tuple(tup) for el in c for tup in el])
 			# print('shape: ',tuple(c))
 			# multiply the contour (x, y)-coordinates by the resize ratio,
-			# then draw the contours and the name of the shape on the image
-			c = c.astype("float")
-			c *= ratio
-			c = c.astype("int")
-			rect = cv2.minAreaRect(c)
-			# area = cv2.contourArea(c)
-			box = cv2.boxPoints(rect)
-			box = np.int0(box)
-
-			ret = cv2.matchShapes(box,c,1,0.0)
-			print("Match Shape value: {} ".format(ret))			
+			# then draw the contours and the name of the shape on the image			
 
 			cv2.drawContours(image, [box],0,(0,0,255),2)
 			# cv2.drawContours(image, [c], -1, (0, 255, 0), 1)
-			cv2.putText(image, str(M["m00"]), (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 
-				0.5, (0, 0, 0), 1)
+			cv2.putText(image, "S: "+str(ret), (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 
+				0.5, (0, 0, 0), 2)
 	i+=1
 
 
