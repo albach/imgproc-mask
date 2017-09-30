@@ -51,9 +51,9 @@ def processImage(directory, imgSrc):
 	blurred = cv2.GaussianBlur(gray, (5, 5), 0)
 	saveImage(directory,"blurred",blurred)
 	# thresh = cv2.threshold(blurred, 135, 255, cv2.THRESH_BINARY)[1]
-	# thresh = cv2.threshold(gray, 165, 255, cv2.THRESH_BINARY)[1]
+	thresh = cv2.threshold(gray, 165, 255, cv2.THRESH_BINARY)[1]
 	# thresh = cv2.adaptiveThreshold(gray, 255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY_INV,11,2)
-	thresh = cv2.adaptiveThreshold(gray,255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,11,2)
+	# thresh = cv2.adaptiveThreshold(gray,255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,11,2)
 	saveImage(directory,"thresh",thresh)
 	inverted = cv2.bitwise_not(thresh);
 	saveImage(directory,"inverted",inverted)
