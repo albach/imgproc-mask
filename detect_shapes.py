@@ -15,6 +15,9 @@ imgCounterSave = 0
 imgCounterShow = 0
 global directory
 directory = ''
+global imageName
+imageName = ''
+BASE = os.path.dirname(os.path.abspath(__file__))
 
 def showImage(name, img):
 	global imgCounterShow
@@ -25,16 +28,17 @@ def saveImage(directory, name, img):
 	# showImage(name,img)
 	global imgCounterSave
 	imgCounterSave += 1
-	if not os.path.exists("../"+directory+str(datetime.now().strftime("%Y-%m-%d__%H_%M_%S"))):
-		os.makedirs("../"+directory+str(datetime.now().strftime("%Y-%m-%d__%H_%M_%S")))
-	cv2.imwrite("../"+directory+str(datetime.now().strftime("%Y-%m-%d__%H_%M_%S"))+"/"+str(imgCounterSave)+" "+name+'.jpeg',img)
+	# print("../"+directory+"-"+imageName+"_"+str(datetime.now().strftime("%Y-%m-%d")))
+	if not os.path.exists("../"+directory+"-"+imageName+"_"+str(datetime.now().strftime("%Y-%m-%d"))):
+		os.makedirs("../"+directory+"-"+imageName+"_"+str(datetime.now().strftime("%Y-%m-%d")))
+	cv2.imwrite("../"+directory+"-"+imageName+"_"+str(datetime.now().strftime("%Y-%m-%d"))+"/"+str(imgCounterSave)+" "+name+'.jpeg',img)
 
 def processImage(directory, imgSrc):
 	# load the image and resize it to a smaller factor so that
 	# the shapes can be approximated better
-	print("Folder: {} img: {}".format(directory, imgSrc))
+	# print("Folder: {} img: {}".format(directory, imgSrc))
 	image = cv2.imread(imgSrc)
-	print("Image object: {}".format(image))
+	# print("Image object: {}".format(image))
 	# showImage("test", image)
 	resized = imutils.resize(image, width=300)
 	saveImage(directory,"resized",resized)
@@ -102,7 +106,8 @@ def processImage(directory, imgSrc):
 			# print("area {} - areaMoment {}".format(area, areaMoments))
 			# if shape:
 			
-			if ret<= 0.18 and M["m00"] >=400 and M["m00"] <= 1000 :
+			# if ret<= 0.18 and M["m00"] >=400 and M["m00"] <= 1000 :
+			if ret<= 0.25 :
 			# if M:
 				# peri = cv2.arcLength(c, True)
 				print("HOla/?")
@@ -187,6 +192,8 @@ def processImage(directory, imgSrc):
 					0.5, (0, 0, 0), 2)
 		i+=1
 
+	saveImage(directory,"Final",image)
+
 
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
@@ -198,7 +205,7 @@ args = vars(ap.parse_args())
 
 if args['image']:
 	directory = args['image'].split('.')[0] + datetime.now().strftime("%Y-%m-%d__%H_%M_%S")
-	print(type(args["image"]))
+	# print(type(args["image"]))
 	processImage(directory, args['image'])
 elif args['folder']:
 	directory = args['folder']
@@ -207,9 +214,10 @@ elif args['folder']:
 	    filename = os.fsdecode(file)
 	    if filename.endswith(".jpeg") or filename.endswith(".jpg"): 
 	        # print(os.path.join(directory, filename))
-	        print(filename)
-	        print(type(filename))
-	        processImage(directory, filename)
+	        # print(filename)
+	        # print(type(filename))
+	        imageName = filename.split('.')[0]
+	        processImage(directory, os.path.join(directory, filename))
 	    else:
 	        continue
 else:
