@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # USAGE
 # python detect_shapes.py --image shapes_and_colors.png
 
@@ -18,6 +19,7 @@ directory = ''
 global imageName
 imageName = ''
 BASE = os.path.dirname(os.path.abspath(__file__))
+print(sys.version[0])
 
 def showImage(name, img):
 	global imgCounterShow
@@ -107,10 +109,9 @@ def processImage(directory, imgSrc):
 			# if shape:
 			
 			# if ret<= 0.18 and M["m00"] >=400 and M["m00"] <= 1000 :
-			if ret<= 0.25 :
+			if ret<= 0.25 and  M["m00"] >=300:
 			# if M:
 				# peri = cv2.arcLength(c, True)
-				print("HOla/?")
 				# mask defaulting to black for 3-channel and transparent for 4-channel
 				# (of course replace corners with yours)
 				maskIni = np.zeros(image.shape, dtype=np.uint8)
@@ -187,9 +188,11 @@ def processImage(directory, imgSrc):
 				# then draw the contours and the name of the shape on the image			
 
 				cv2.drawContours(image, [box],0,(0,0,255),2)
-				# cv2.drawContours(image, [c], -1, (0, 255, 0), 1)
-				cv2.putText(image, "S: "+str(ret), (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 
+				cv2.putText(image, "S: {:f}".format(ret), (cX-50, cY), cv2.FONT_HERSHEY_SIMPLEX, 
 					0.5, (0, 0, 0), 2)
+				cv2.putText(image, "M: {:.3f}".format( M["m00"]), (cX-50, cY+15), cv2.FONT_HERSHEY_SIMPLEX, 
+					0.5, (0, 0, 0), 2)
+			cv2.drawContours(image, [c2], -1, (0, 255, 0), 2)
 		i+=1
 
 	saveImage(directory,"Final",image)
