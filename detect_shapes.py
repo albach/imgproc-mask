@@ -14,8 +14,8 @@ import sys
 
 imgCounterSave = 0
 imgCounterShow = 0
-global directory
-directory = ''
+metodo = 3
+dirFol = ''
 global imageName
 imageName = ''
 BASE = os.path.dirname(os.path.abspath(__file__))
@@ -31,14 +31,16 @@ def saveImage(directory, name, img):
 	global imgCounterSave
 	imgCounterSave += 1
 	# print("../"+directory+"-"+imageName+"_"+str(datetime.now().strftime("%Y-%m-%d")))
-	if not os.path.exists("../"+directory+"-"+imageName+"_"+str(datetime.now().strftime("%Y-%m-%d"))):
-		os.makedirs("../"+directory+"-"+imageName+"_"+str(datetime.now().strftime("%Y-%m-%d")))
-	cv2.imwrite("../"+directory+"-"+imageName+"_"+str(datetime.now().strftime("%Y-%m-%d"))+"/"+str(imgCounterSave)+" "+name+'.jpeg',img)
+	if not os.path.exists("../M"+str(metodo)+"_"+directory+imageName+"_"+str(datetime.now().strftime("%Y%m%d-%H_%M"))):
+		os.makedirs("../M"+str(metodo)+"_"+directory+imageName+"_"+str(datetime.now().strftime("%Y%m%d-%H_%M")))
+	cv2.imwrite("../M"+str(metodo)+"_"+directory+imageName+"_"+str(datetime.now().strftime("%Y%m%d-%H_%M"))+"/"+str(imgCounterSave)+" "+name+'.jpeg',img)
 
 def processImage(directory, imgSrc):
 	# load the image and resize it to a smaller factor so that
 	# the shapes can be approximated better
 	# print("Folder: {} img: {}".format(directory, imgSrc))
+	global imgCounterSave
+	imgCounterSave = 0
 	image = cv2.imread(imgSrc)
 	# print("Image object: {}".format(image))
 	# showImage("test", image)
@@ -83,7 +85,7 @@ def processImage(directory, imgSrc):
 			box = cv2.boxPoints(rect)
 			box = np.int0(box)
 
-			ret = cv2.matchShapes(box,c2,1,0.0)
+			ret = cv2.matchShapes(box,c2,metodo,0.0)
 			print("Match Shape value: {} ".format(ret))
 
 			M = cv2.moments(c)
@@ -195,7 +197,7 @@ def processImage(directory, imgSrc):
 			cv2.drawContours(image, [c2], -1, (0, 255, 0), 2)
 		i+=1
 
-	saveImage(directory,"Final",image)
+	saveImage(directory,"Final->"+str(metodo),image)
 
 
 # construct the argument parse and parse the arguments
@@ -207,20 +209,18 @@ ap.add_argument("-f", "--folder", required=False,
 args = vars(ap.parse_args())
 
 if args['image']:
-	directory = args['image'].split('.')[0] + datetime.now().strftime("%Y-%m-%d__%H_%M_%S")
+	dirFol = args['image'].split('.')[0] + datetime.now().strftime("%Y-%m-%d__%H_%M_%S")
 	# print(type(args["image"]))
-	processImage(directory, args['image'])
+	processImage(dirFol, args['image'])
 elif args['folder']:
-	directory = args['folder']
+	dirFol = args['folder']
 
-	for file in os.listdir(directory):
+	for file in os.listdir(dirFol):
 	    filename = os.fsdecode(file)
 	    if filename.endswith(".jpeg") or filename.endswith(".jpg"): 
-	        # print(os.path.join(directory, filename))
-	        # print(filename)
-	        # print(type(filename))
-	        imageName = filename.split('.')[0]
-	        processImage(directory, os.path.join(directory, filename))
+		    imgCounterShow = 0
+		    imageName = filename.split('.')[0]
+		    processImage(dirFol, os.path.join(dirFol, filename))
 	    else:
 	        continue
 else:
