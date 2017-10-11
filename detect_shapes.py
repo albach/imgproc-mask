@@ -51,18 +51,36 @@ def processImage(directory, imgSrc):
 	# saveImage(directory,"resized",resized)
 	ratio = image.shape[0] / float(resized.shape[0])
 
+	##
+	# hsv = cv2.cvtColor(resized, cv2.COLOR_BGR2HSV)
+	# boundaries = [([254,252,27],[255,255,250]),([160,51,160],[252,182,252]),([175,151,61],[254,252,27])]
+
+	# for (lower,upper) in boundaries:
+	# 	lower = np.array(lower, dtype = "uint8")
+	# 	upper = np.array(upper, dtype = "uint8")
+
+	# 	mask = cv2.inRange(image, lower, upper)
+	# 	output = cv2.bitwise_and(image, image, mask = mask)
+
+	# 	cv2.imshow("images", np.hstack([image, output]))
+	# 	cv2.waitKey(0)
+
+	##
+
 	# convert the resized image to grayscale, blur it slightly,
 	# and threshold it
 	gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
+	gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
+	blurred = cv2.medianBlur(gray, 5)
 	# saveImage(directory,"gray",gray)
-	blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+	# blurred = cv2.GaussianBlur(gray, (5, 5), 0)
 	# saveImage(directory,"blurred",blurred)
 	# thresh = cv2.threshold(blurred, 135, 255, cv2.THRESH_BINARY)[1]
-	thresh = cv2.threshold(gray, 165, 255, cv2.THRESH_BINARY)[1]
+	# thresh = cv2.threshold(gray, 165, 255, cv2.THRESH_BINARY)[1]
 	# thresh = cv2.threshold(blurred, 165, 255, cv2.THRESH_BINARY)[1]
 	# thresh = cv2.adaptiveThreshold(gray, 255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY_INV,11,2)
-	# thresh = cv2.adaptiveThreshold(gray,255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,11,2)
-	# saveImage(directory,"thresh",thresh)
+	thresh = cv2.adaptiveThreshold(gray,255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,43,2)
+	saveImage(directory,"thresh",thresh)
 	inverted = cv2.bitwise_not(thresh);
 	# saveImage(directory,"inverted",inverted)
 	# find contours in the thresholded image and initialize the
@@ -193,14 +211,14 @@ def processImage(directory, imgSrc):
 				# multiply the contour (x, y)-coordinates by the resize ratio,
 				# then draw the contours and the name of the shape on the image			
 
-				# cv2.drawContours(image, [box],0,(0,0,255),2)
-				# cv2.putText(image, "S: {:f}".format(ret), (cX-50, cY), cv2.FONT_HERSHEY_SIMPLEX, 
-				# 	0.5, (0, 0, 0), 2)
-				# cv2.putText(image, "M: {:.3f}".format( M["m00"]*ratio), (cX-50, cY+15), cv2.FONT_HERSHEY_SIMPLEX, 
-				# 	0.5, (0, 0, 0), 2)
-				# cv2.putText(image, "Sh: {}".format( shape ), (cX-50, cY+30), cv2.FONT_HERSHEY_SIMPLEX, 
-				# 	0.5, (0, 0, 0), 2)
-			# cv2.drawContours(image, [c2], -1, (0, 255, 0), 2)
+				cv2.drawContours(image, [box],0,(0,0,255),2)
+			cv2.putText(image, "S: {:f}".format(ret), (cX-50, cY), cv2.FONT_HERSHEY_SIMPLEX, 
+				0.5, (0, 0, 0), 2)
+			cv2.putText(image, "M: {:.3f}".format( M["m00"]*ratio), (cX-50, cY+15), cv2.FONT_HERSHEY_SIMPLEX, 
+				0.5, (0, 0, 0), 2)
+			cv2.putText(image, "Sh: {}".format( shape ), (cX-50, cY+30), cv2.FONT_HERSHEY_SIMPLEX, 
+				0.5, (0, 0, 0), 2)
+			cv2.drawContours(image, [c2], -1, (0, 255, 0), 2)
 		i+=1
 
 	saveImage(directory,"Final-)"+str(metodo),image)
