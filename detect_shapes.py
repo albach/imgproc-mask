@@ -14,12 +14,12 @@ import sys
 
 imgCounterSave = 0
 imgCounterShow = 0
-metodo = 3
+metodo = 2
 dirFol = ''
 global imageName
 imageName = ''
 BASE = os.path.dirname(os.path.abspath(__file__))
-print(sys.version[0])
+# print(sys.version[0])
 
 def showImage(name, img):
 	global imgCounterShow
@@ -27,13 +27,16 @@ def showImage(name, img):
 	cv2.imshow(str(imgCounterShow)+" "+name, img)
 
 def saveImage(directory, name, img):
+	if directory[:-1] != '/':
+		directory = directory + "/"
 	# showImage(name,img)
 	global imgCounterSave
 	imgCounterSave += 1
 	# print("../"+directory+"-"+imageName+"_"+str(datetime.now().strftime("%Y-%m-%d")))
-	if not os.path.exists("../M"+str(metodo)+"_"+directory+imageName+"_"+str(datetime.now().strftime("%Y%m%d-%H_%M"))):
-		os.makedirs("../M"+str(metodo)+"_"+directory+imageName+"_"+str(datetime.now().strftime("%Y%m%d-%H_%M")))
-	cv2.imwrite("../M"+str(metodo)+"_"+directory+imageName+"_"+str(datetime.now().strftime("%Y%m%d-%H_%M"))+"/"+str(imgCounterSave)+" "+name+'.jpeg',img)
+	# if not os.path.exists("../BM"+str(metodo)+"_"+directory+imageName+"_"+str(datetime.now().strftime("%Y%m%d-%H_%M"))):
+	if not os.path.exists("../BM"+str(metodo)+"_"+directory):
+		os.makedirs("../BM"+str(metodo)+"_"+directory)
+	cv2.imwrite("../BM"+str(metodo)+"_"+directory+imageName+"_"+str(datetime.now().strftime("%Y%m%d-%H_%M"))+"_"+name+'.jpeg',img)
 
 def processImage(directory, imgSrc):
 	# load the image and resize it to a smaller factor so that
@@ -45,25 +48,26 @@ def processImage(directory, imgSrc):
 	# print("Image object: {}".format(image))
 	# showImage("test", image)
 	resized = imutils.resize(image, width=300)
-	saveImage(directory,"resized",resized)
+	# saveImage(directory,"resized",resized)
 	ratio = image.shape[0] / float(resized.shape[0])
 
 	# convert the resized image to grayscale, blur it slightly,
 	# and threshold it
 	gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
-	saveImage(directory,"gray",gray)
+	# saveImage(directory,"gray",gray)
 	blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-	saveImage(directory,"blurred",blurred)
+	# saveImage(directory,"blurred",blurred)
 	# thresh = cv2.threshold(blurred, 135, 255, cv2.THRESH_BINARY)[1]
 	thresh = cv2.threshold(gray, 165, 255, cv2.THRESH_BINARY)[1]
+	# thresh = cv2.threshold(blurred, 165, 255, cv2.THRESH_BINARY)[1]
 	# thresh = cv2.adaptiveThreshold(gray, 255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY_INV,11,2)
 	# thresh = cv2.adaptiveThreshold(gray,255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,11,2)
-	saveImage(directory,"thresh",thresh)
+	# saveImage(directory,"thresh",thresh)
 	inverted = cv2.bitwise_not(thresh);
-	saveImage(directory,"inverted",inverted)
+	# saveImage(directory,"inverted",inverted)
 	# find contours in the thresholded image and initialize the
 	# shape detector 
-	saveImage(directory,"original",image)
+	# saveImage(directory,"original",image)
 
 	# Miguel: Initially the thresh
 	cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL,
@@ -86,7 +90,7 @@ def processImage(directory, imgSrc):
 			box = np.int0(box)
 
 			ret = cv2.matchShapes(box,c2,metodo,0.0)
-			print("Match Shape value: {} ".format(ret))
+			# print("Match Shape value: {} ".format(ret))
 
 			M = cv2.moments(c)
 			# print(M)
@@ -96,7 +100,7 @@ def processImage(directory, imgSrc):
 				cX = int((M["m10"] / M["m00"]) * ratio)
 				cY = int((M["m01"] / M["m00"]) * ratio)
 			
-			shape = sd.detect(c)
+			shape = sd.detect(c2)
 			
 			# c = c.astype("float")
 			# c *= ratio
@@ -111,7 +115,7 @@ def processImage(directory, imgSrc):
 			# if shape:
 			
 			# if ret<= 0.18 and M["m00"] >=400 and M["m00"] <= 1000 :
-			if ret<= 0.25 and  M["m00"] >=300:
+			if ret<= 0.25 and  M["m00"]*ratio >=2000 and M["m00"]*ratio <= 4000:
 			# if M:
 				# peri = cv2.arcLength(c, True)
 				# mask defaulting to black for 3-channel and transparent for 4-channel
@@ -130,11 +134,11 @@ def processImage(directory, imgSrc):
 
 				white = (255, 255, 255)
 				cv2.fillPoly(mask, roi_corners, white)
-				saveImage(directory,"mask"+str(i),mask)
+				# saveImage(directory,"mask"+str(i),mask)
 
 				# apply the mask
 				masked_image_bit = cv2.bitwise_and(image, maskIni)
-				saveImage(directory,"mask.bitwise.and.image"+str(i),masked_image_bit)
+				# saveImage(directory,"mask.bitwise.and.image"+str(i),masked_image_bit)
 				
 				# masked_image_bit_not = cv2.bitwise_not(masked_image_bit)
 				# saveImage(directory,"mask.bitwise.not.image"+str(i),masked_image_bit_not)
@@ -146,13 +150,13 @@ def processImage(directory, imgSrc):
 				# saveImage(directory,"blurred_maskimgbit"+str(i),blurred_mask_image_bit)
 				
 				blurMask_add_img = cv2.add(image,blurred_mask_image_bit)
-				saveImage(directory,"blurmask.add.image"+str(i),blurMask_add_img)
+				# saveImage(directory,"blurmask.add.image"+str(i),blurMask_add_img)
 
 				# blurMaskNot_add_img = cv2.add(image,blurred_mask_image_bit_not)
 				# saveImage(directory,"blurmaskNot.add.image"+str(i),blurMaskNot_add_img)
 
 				mask_add_img = cv2.add(image, maskIni)
-				saveImage(directory,"mask.add.image"+str(i),mask_add_img)
+				# saveImage(directory,"mask.add.image"+str(i),mask_add_img)
 
 				# invBlurMask = cv2.bitwise_not(blurred_mask_image_bit)
 				# saveImage(directory,"invertedBlurredMask"+str(i),invBlurMask)
@@ -189,15 +193,17 @@ def processImage(directory, imgSrc):
 				# multiply the contour (x, y)-coordinates by the resize ratio,
 				# then draw the contours and the name of the shape on the image			
 
-				cv2.drawContours(image, [box],0,(0,0,255),2)
-				cv2.putText(image, "S: {:f}".format(ret), (cX-50, cY), cv2.FONT_HERSHEY_SIMPLEX, 
-					0.5, (0, 0, 0), 2)
-				cv2.putText(image, "M: {:.3f}".format( M["m00"]), (cX-50, cY+15), cv2.FONT_HERSHEY_SIMPLEX, 
-					0.5, (0, 0, 0), 2)
-			cv2.drawContours(image, [c2], -1, (0, 255, 0), 2)
+				# cv2.drawContours(image, [box],0,(0,0,255),2)
+				# cv2.putText(image, "S: {:f}".format(ret), (cX-50, cY), cv2.FONT_HERSHEY_SIMPLEX, 
+				# 	0.5, (0, 0, 0), 2)
+				# cv2.putText(image, "M: {:.3f}".format( M["m00"]*ratio), (cX-50, cY+15), cv2.FONT_HERSHEY_SIMPLEX, 
+				# 	0.5, (0, 0, 0), 2)
+				# cv2.putText(image, "Sh: {}".format( shape ), (cX-50, cY+30), cv2.FONT_HERSHEY_SIMPLEX, 
+				# 	0.5, (0, 0, 0), 2)
+			# cv2.drawContours(image, [c2], -1, (0, 255, 0), 2)
 		i+=1
 
-	saveImage(directory,"Final->"+str(metodo),image)
+	saveImage(directory,"Final-)"+str(metodo),image)
 
 
 # construct the argument parse and parse the arguments
