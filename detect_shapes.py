@@ -30,9 +30,9 @@ def saveImage(directory, name, img):
 		directory = directory + "/"
 	global imgCounterSave
 	imgCounterSave += 1
-	if not os.path.exists("../BM"+str(metodo)+"_"+directory):
-		os.makedirs("../BM"+str(metodo)+"_"+directory)
-	cv2.imwrite("../BM"+str(metodo)+"_"+directory+imageName+"_"+str(datetime.now().strftime("%Y%m%d-%H_%M"))+"_"+name+'.jpeg',img)
+	if not os.path.exists("./BM"+str(metodo)+"_"+directory):
+		os.makedirs("./BM"+str(metodo)+"_"+directory)
+	cv2.imwrite("./BM"+str(metodo)+"_"+directory+imageName+"_"+str(datetime.now().strftime("%Y%m%d-%H_%M"))+"_"+name+'.jpeg',img)
 
 def blurRoi(img, x1, y1, x2, y2, k):
 	# roi in the image First [y:y+dy, x:x+dx]
@@ -93,26 +93,31 @@ def processImage(directory, imgSrc):
 			# shape using only the contour using original contour c
 			M = cv2.moments(c)
 			# print(M)
-			cX = 0
-			cY = 0
-			if M["m00"] != float(0):
-				cX = int((M["m10"] / M["m00"]) * ratio)
-				cY = int((M["m01"] / M["m00"]) * ratio)
-			if M["m00"]*ratio >=1000 and M["m00"]*ratio <= 2000:
-				# ========== ROI
-				x,y,w,h = cv2.boundingRect(c2)
-				# ========== end ROI
-				image = blurRoi(image, x,y,x+w,y+h,31)
-				# DRAWING
-				cv2.rectangle(image,(x,y),(x+w,y+h),(0,255,0),1)
-				# print("Polygon: {} Sides: {}".format(polygon, len(polygon)))
-				# DRAWING
-				cv2.putText(image, "S: {:f}".format(ret), (cX-50, cY), cv2.FONT_HERSHEY_SIMPLEX, 
-					0.5, (204,0,204), 1)
-				cv2.putText(image, "M: {:.3f}".format( M["m00"]*ratio), (cX-50, cY+15), cv2.FONT_HERSHEY_SIMPLEX, 
-					0.5, (204,0,204), 1)
-				# cv2.putText(image, "Sh: {}".format( len(polygon) ), (cX-50, cY+30), cv2.FONT_HERSHEY_SIMPLEX, 
-				# 	0.5, (204,0,204), 1)
+			# ========== ROI
+			x,y,w,h = cv2.boundingRect(c2)
+			# ========== end ROI
+			# Check whether is a rectangle or not
+			if w/h>3:
+				cX = 0
+				cY = 0
+				if M["m00"] != float(0):
+					cX = int((M["m10"] / M["m00"]) * ratio)
+					cY = int((M["m01"] / M["m00"]) * ratio)
+				if M["m00"]*ratio >=1000 and M["m00"]*ratio <= 2000:
+					
+					image = blurRoi(image, x,y,x+w,y+h,31)
+					# DRAWING
+					cv2.rectangle(image,(x,y),(x+w,y+h),(0,255,0),1)
+					# print("Polygon: {} Sides: {}".format(polygon, len(polygon)))
+					# DRAWING
+					cv2.putText(image, "S: {:f}".format(ret), (cX-50, cY), cv2.FONT_HERSHEY_SIMPLEX, 
+						0.5, (204,0,204), 1)
+					cv2.putText(image, "M: {:.3f}".format( M["m00"]*ratio), (cX-50, cY+15), cv2.FONT_HERSHEY_SIMPLEX, 
+						0.5, (204,0,204), 1)
+					cv2.putText(image, "dx/dy: {}".format( w/h ), (cX-50, cY+30), cv2.FONT_HERSHEY_SIMPLEX, 
+						0.5, (204,0,204), 1)
+					# cv2.putText(image, "Sh: {}".format( len(polygon) ), (cX-50, cY+30), cv2.FONT_HERSHEY_SIMPLEX, 
+					# 	0.5, (204,0,204), 1)
 		# else:
 			# It is not a square image between the given dimensions
 			# cv2.drawContours(image, [c2], -1, (0, 204, 0), 2)
