@@ -19,7 +19,6 @@ dirFol = ''
 global imageName
 imageName = ''
 BASE = os.path.dirname(os.path.abspath(__file__))
-# print(sys.version[0])
 
 def showImage(name, img):
 	global imgCounterShow
@@ -29,65 +28,47 @@ def showImage(name, img):
 def saveImage(directory, name, img):
 	if directory[:-1] != '/':
 		directory = directory + "/"
-	# showImage(name,img)
 	global imgCounterSave
 	imgCounterSave += 1
-	# print("../"+directory+"-"+imageName+"_"+str(datetime.now().strftime("%Y-%m-%d")))
-	# if not os.path.exists("../BM"+str(metodo)+"_"+directory+imageName+"_"+str(datetime.now().strftime("%Y%m%d-%H_%M"))):
 	if not os.path.exists("../BM"+str(metodo)+"_"+directory):
 		os.makedirs("../BM"+str(metodo)+"_"+directory)
 	cv2.imwrite("../BM"+str(metodo)+"_"+directory+imageName+"_"+str(datetime.now().strftime("%Y%m%d-%H_%M"))+"_"+name+'.jpeg',img)
 
+def blurRoi(img, x1, y1, x2, y2, k):
+	# roi in the image First [y:y+dy, x:x+dx]
+	# y increase
+	yy1 = y1
+	yy2 = y2
+	# x increase
+	xx1 = x1
+	xx2 = x2
+	# select Region of Interest
+	roiF = img[yy1:yy2,xx1:xx2]
+	# blur
+	roiF_blurred = cv2.GaussianBlur(roiF, (k, k), 0)
+	img[yy1:yy2,xx1:xx2] = roiF_blurred
+	return img
+
 def processImage(directory, imgSrc):
 	# load the image and resize it to a smaller factor so that
 	# the shapes can be approximated better
-	# print("Folder: {} img: {}".format(directory, imgSrc))
 	global imgCounterSave
 	imgCounterSave = 0
 	image = cv2.imread(imgSrc)
 	# print("Image object: {}".format(image))
-	# showImage("test", image)
 	resized = imutils.resize(image, width=300)
-	# saveImage(directory,"resized",resized)
-	ratio = image.shape[0] / float(resized.shape[0])
-
-	##
-	# hsv = cv2.cvtColor(resized, cv2.COLOR_BGR2HSV)
-	# boundaries = [([254,252,27],[255,255,250]),([160,51,160],[252,182,252]),([175,151,61],[254,252,27])]
-
-	# for (lower,upper) in boundaries:
-	# 	lower = np.array(lower, dtype = "uint8")
-	# 	upper = np.array(upper, dtype = "uint8")
-
-	# 	mask = cv2.inRange(image, lower, upper)
-	# 	output = cv2.bitwise_and(image, image, mask = mask)
-
-	# 	cv2.imshow("images", np.hstack([image, output]))
-	# 	cv2.waitKey(0)
-
-	##
+	ratio = image.shape[0] / float(resized.shape[0])	
 
 	# convert the resized image to grayscale, blur it slightly,
 	# and threshold it
 	gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
 	gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
-	blurred = cv2.medianBlur(gray, 5)
-	# saveImage(directory,"gray",gray)
-	# blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-	# saveImage(directory,"blurred",blurred)
-	# thresh = cv2.threshold(blurred, 135, 255, cv2.THRESH_BINARY)[1]
-	# thresh = cv2.threshold(gray, 165, 255, cv2.THRESH_BINARY)[1]
-	# thresh = cv2.threshold(blurred, 165, 255, cv2.THRESH_BINARY)[1]
-	# thresh = cv2.adaptiveThreshold(gray, 255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY_INV,11,2)
-	thresh = cv2.adaptiveThreshold(gray,255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,43,2)
-	saveImage(directory,"thresh",thresh)
+	blurred = cv2.GaussianBlur(gray, (1, 1), 0)
+	thresh = cv2.adaptiveThreshold(blurred,255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,43,2)
+	# saveImage(directory,"thresh",thresh)
 	inverted = cv2.bitwise_not(thresh);
-	# saveImage(directory,"inverted",inverted)
-	# find contours in the thresholded image and initialize the
-	# shape detector 
-	# saveImage(directory,"original",image)
 
-	# Miguel: Initially the thresh
+	# Miguel: find contours in the thresholded image and initialize the shape detector	
 	cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL,
 		cv2.CHAIN_APPROX_SIMPLE)
 	cnts = cnts[0] if imutils.is_cv2() else cnts[1]
@@ -95,21 +76,21 @@ def processImage(directory, imgSrc):
 	i = 0
 	# loop over the contours
 	for c in cnts:
-		# compute the center of the contour, then detect the name of the
-		# shape using only the contour
-		if i:
-			c2 = c
-			c2 = c2.astype("float")
-			c2 *= ratio
-			c2 = c2.astype("int")
-			rect = cv2.minAreaRect(c2)
-			# area = cv2.contourArea(c)
-			box = cv2.boxPoints(rect)
-			box = np.int0(box)
-
-			ret = cv2.matchShapes(box,c2,metodo,0.0)
-			# print("Match Shape value: {} ".format(ret))
-
+		c2 = c
+		c2 = c2.astype("float")
+		c2 *= ratio
+		c2 = c2.astype("int")
+		rect = cv2.minAreaRect(c2)
+		box = cv2.boxPoints(rect)
+		box = np.int0(box)
+		ret = cv2.matchShapes(box,c2,metodo,0.0)
+		# ============= shape detect
+		perimeter = 0.07*cv2.arcLength(c2,True)
+		polygon = cv2.approxPolyDP(c2,perimeter,True)
+		# ============= end shape detect
+		if len(polygon)==4:
+			# compute the center of the contour, then detect the name of the
+			# shape using only the contour using original contour c
 			M = cv2.moments(c)
 			# print(M)
 			cX = 0
@@ -117,112 +98,26 @@ def processImage(directory, imgSrc):
 			if M["m00"] != float(0):
 				cX = int((M["m10"] / M["m00"]) * ratio)
 				cY = int((M["m01"] / M["m00"]) * ratio)
-			
-			shape = sd.detect(c2)
-			
-			# c = c.astype("float")
-			# c *= ratio
-			# c = c.astype("int")
-
-			rect = cv2.minAreaRect(c)
-			# area = cv2.contourArea(c)
-			# areaMoments = M["m00"]
-			# box = cv2.boxPoints(rect)
-			# box = np.int0(box)
-			# print("area {} - areaMoment {}".format(area, areaMoments))
-			# if shape:
-			
-			# if ret<= 0.18 and M["m00"] >=400 and M["m00"] <= 1000 :
-			if ret<= 0.25 and  M["m00"]*ratio >=2000 and M["m00"]*ratio <= 4000:
-			# if M:
-				# peri = cv2.arcLength(c, True)
-				# mask defaulting to black for 3-channel and transparent for 4-channel
-				# (of course replace corners with yours)
-				maskIni = np.zeros(image.shape, dtype=np.uint8)
-				mask = maskIni
-				# saveImage(directory,"maskInitialize"+str(i),maskIni)
-
-				# roi_corners = np.array([[(10,10), (200,200), (10,200)]], dtype=np.int32)
-				roi_corners = np.array([[tuple(tup) for el in [y * ratio for y in c] for tup in el]], dtype=np.int32)
-				# fill the ROI so it doesn't get wiped out when the mask is applied
-				# channel_count2 = image.shape[1]  # i.e. 3 or 4 depending on your image
-				# ignore_mask_color = (255,)*channel_count3
-				# cv2.fillPoly(mask, roi_corners, ignore_mask_color)
-				# showImage("maskAgain"+str(i), mask)
-
-				white = (255, 255, 255)
-				cv2.fillPoly(mask, roi_corners, white)
-				# saveImage(directory,"mask"+str(i),mask)
-
-				# apply the mask
-				masked_image_bit = cv2.bitwise_and(image, maskIni)
-				# saveImage(directory,"mask.bitwise.and.image"+str(i),masked_image_bit)
-				
-				# masked_image_bit_not = cv2.bitwise_not(masked_image_bit)
-				# saveImage(directory,"mask.bitwise.not.image"+str(i),masked_image_bit_not)
-
-				# blurred_mask_image_bit_not = cv2.GaussianBlur(masked_image_bit_not,(23, 23), 10)
-				# saveImage(directory,"blurred_maskimgbit_not"+str(i),blurred_mask_image_bit_not)
-
-				blurred_mask_image_bit = cv2.GaussianBlur(masked_image_bit,(23, 23), 10)
-				# saveImage(directory,"blurred_maskimgbit"+str(i),blurred_mask_image_bit)
-				
-				blurMask_add_img = cv2.add(image,blurred_mask_image_bit)
-				# saveImage(directory,"blurmask.add.image"+str(i),blurMask_add_img)
-
-				# blurMaskNot_add_img = cv2.add(image,blurred_mask_image_bit_not)
-				# saveImage(directory,"blurmaskNot.add.image"+str(i),blurMaskNot_add_img)
-
-				mask_add_img = cv2.add(image, maskIni)
-				# saveImage(directory,"mask.add.image"+str(i),mask_add_img)
-
-				# invBlurMask = cv2.bitwise_not(blurred_mask_image_bit)
-				# saveImage(directory,"invertedBlurredMask"+str(i),invBlurMask)
-
-				#add blurred mask with content to original image with white space
-				# maskImg_add_blurImag = cv2.add(mask_add_img, invBlurMask)
-				# saveImage(directory,"img.mask.add.blurImg"+str(), maskImg_add_blurImag)
-
-				# invBlurMask = cv2.bitwise_not(blurred_mask_image_bit)
-				# saveImage(directory,"invertedBlurredMask_bit_not"+str(i),invBlurMask)
-
-				# invBlurMask_not = cv2.bitwise_not(blurred_mask_image_bit_not)
-				# saveImage(directory,"invertedBlurredNotMask_bit_not"+str(i),invBlurMask_not)
-				
-				# masked_img_xor = cv2.bitwise_xor(mask_add_img, blurred_mask_image_bit)
-				# saveImage(directory,"mask.xor.image"+str(i),masked_img_xor)
-
-				image = mask_add_img
-
-				# masked_not_xor_img = cv2.bitwise_or(mask_add_img, invBlurMask_not)
-				# saveImage(directory,"maskNot.xor.image"+str(i),masked_not_xor_img)
-
-				# img1_bg = cv2.bitwise_and(roi_corners,roi_corners,masked_image)
-				# showImage("bitwise", img1_bg)
-				# result = blurred_mask / image
-				# saveImage(directory,"resultMinus"+str(i),result)
-
-				# save the result
-				# saveImage(directory,"masked"+str(i),masked_image)
-				# (x, y, w, h) = cv2.boundingRect(cv2.approxPolyDP(c, 0.04 * peri, True))
-				# print("and this?: ", list(zip(*c)))
-				# print('whats this?', [tuple(tup) for el in c for tup in el])
-				# print('shape: ',tuple(c))
-				# multiply the contour (x, y)-coordinates by the resize ratio,
-				# then draw the contours and the name of the shape on the image			
-
-				cv2.drawContours(image, [box],0,(0,0,255),2)
-			cv2.putText(image, "S: {:f}".format(ret), (cX-50, cY), cv2.FONT_HERSHEY_SIMPLEX, 
-				0.5, (0, 0, 0), 2)
-			cv2.putText(image, "M: {:.3f}".format( M["m00"]*ratio), (cX-50, cY+15), cv2.FONT_HERSHEY_SIMPLEX, 
-				0.5, (0, 0, 0), 2)
-			cv2.putText(image, "Sh: {}".format( shape ), (cX-50, cY+30), cv2.FONT_HERSHEY_SIMPLEX, 
-				0.5, (0, 0, 0), 2)
-			cv2.drawContours(image, [c2], -1, (0, 255, 0), 2)
-		i+=1
-
-	saveImage(directory,"Final-)"+str(metodo),image)
-
+			if M["m00"]*ratio >=1000 and M["m00"]*ratio <= 2000:
+				# ========== ROI
+				x,y,w,h = cv2.boundingRect(c2)
+				# ========== end ROI
+				image = blurRoi(image, x,y,x+w,y+h,31)
+				# DRAWING
+				cv2.rectangle(image,(x,y),(x+w,y+h),(0,255,0),1)
+				# print("Polygon: {} Sides: {}".format(polygon, len(polygon)))
+				# DRAWING
+				cv2.putText(image, "S: {:f}".format(ret), (cX-50, cY), cv2.FONT_HERSHEY_SIMPLEX, 
+					0.5, (204,0,204), 1)
+				cv2.putText(image, "M: {:.3f}".format( M["m00"]*ratio), (cX-50, cY+15), cv2.FONT_HERSHEY_SIMPLEX, 
+					0.5, (204,0,204), 1)
+				# cv2.putText(image, "Sh: {}".format( len(polygon) ), (cX-50, cY+30), cv2.FONT_HERSHEY_SIMPLEX, 
+				# 	0.5, (204,0,204), 1)
+		# else:
+			# It is not a square image between the given dimensions
+			# cv2.drawContours(image, [c2], -1, (0, 204, 0), 2)
+			# cv2.drawContours(image, [polygon], -1, (204, 0, 0), 2)	
+	saveImage(directory,"-Final-"+str(metodo),image)
 
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
@@ -254,3 +149,25 @@ else:
 # saveImage(directory,"Final",image)
 # cv2.waitKey(0)
 # cv2.destroyAllWindows()
+# ========= Blur alternatives
+# blurred = cv2.medianBlur(gray, 5)
+# ========= Tresh alternatives
+# thresh = cv2.threshold(blurred, 135, 255, cv2.THRESH_BINARY)[1]
+# thresh = cv2.threshold(gray, 165, 255, cv2.THRESH_BINARY)[1]
+# thresh = cv2.threshold(blurred, 165, 255, cv2.THRESH_BINARY)[1]
+# thresh = cv2.adaptiveThreshold(gray, 255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY_INV,11,2)
+# ========= boundaries alternatives??? 
+# hsv = cv2.cvtColor(resized, cv2.COLOR_BGR2HSV)
+# boundaries = [([254,252,27],[255,255,250]),([160,51,160],[252,182,252]),([175,151,61],[254,252,27])]
+
+# for (lower,upper) in boundaries:
+# 	lower = np.array(lower, dtype = "uint8")
+# 	upper = np.array(upper, dtype = "uint8")
+
+# 	mask = cv2.inRange(image, lower, upper)
+# 	output = cv2.bitwise_and(image, image, mask = mask)
+
+# 	cv2.imshow("images", np.hstack([image, output]))
+# 	cv2.waitKey(0)
+
+##
