@@ -18,6 +18,8 @@ BLUR = None
 METODO = None
 TRSHVAL = None
 PERI = None
+refPt = []
+cropping = False
 
 def init(image, ratio, blur):
 	global imageName
@@ -29,6 +31,10 @@ def init(image, ratio, blur):
 	RATIO = ratio
 	IMG = image
 	BLUR = blur
+	# initialize the list of reference points and boolean indicating
+	# whether cropping is being performed or not
+	refPt = []
+	cropping = False
 
 def shapeDetect(contour, periparam):
 	per = periparam/1000
@@ -37,46 +43,43 @@ def shapeDetect(contour, periparam):
 	return polygon
 
 def perimeterCallback(x):
-	global PERI
-	PERI = x
-	nothing(cv2.getTrackbarPos('threshold','thrsh'))
+	nothing(cv2.getTrackbarPos('threshold','Image Controllers'))
 
 def nothing(x):
 	# print(x)
 	global TRSHVAL
-	global PERI
 	TRSHVAL = x
-	PERI = cv2.getTrackbarPos('perimeter','thrsh')
+	PERI = cv2.getTrackbarPos('perimeter','Image Controllers')
 
 	imageTemp = IMG.copy()
 	ths = []
 	ths_names = []
 
 	thresh1 = cv2.threshold(BLUR,x,255,cv2.THRESH_BINARY)[1]
-	showImage("normal_binary",thresh1)
+	# showImage("normal_binary",thresh1)
 	thresh2 = cv2.threshold(BLUR,x,255,cv2.THRESH_BINARY_INV)[1]
-	showImage("normal_binary_inv",thresh2)
+	# showImage("normal_binary_inv",thresh2)
 	thresh3 = cv2.threshold(BLUR,x,255,cv2.THRESH_TRUNC)[1]
-	showImage("normal_trunc",thresh3)
+	# showImage("normal_trunc",thresh3)
 	thresh4 = cv2.threshold(BLUR,x,255,cv2.THRESH_TOZERO)[1]
-	showImage("normal_tozero",thresh4)
+	# showImage("normal_tozero",thresh4)
 	thresh5 = cv2.threshold(BLUR,x,255,cv2.THRESH_TOZERO_INV)[1]
-	showImage("normal_tozero_inv",thresh5)
+	# showImage("normal_tozero_inv",thresh5)
 	thresh6 = cv2.threshold(BLUR,x,255,cv2.THRESH_BINARY)[1]
-	showImage("binary_otsu",thresh6)
+	# showImage("binary_otsu",thresh6)
 	
 	ths = [thresh1,thresh2,thresh3,thresh4,thresh5,thresh6]
 	ths_names = ['BINARY','BINARY_INV','TRUNC','TOZERO','TOZERO_INV','OTZU']
 
 	if x%2==1:
 		thresh_mean = cv2.adaptiveThreshold(BLUR,255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,x,2)
-		showImage("th_mean", thresh_mean)
+		# showImage("th_mean", thresh_mean)
 		thresh_gauss = cv2.adaptiveThreshold(BLUR,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,x,2)
-		showImage("th_gauss", thresh_gauss)
+		# showImage("th_gauss", thresh_gauss)
 		ths.append(thresh_mean)
 		ths.append(thresh_gauss)
-		ths_names.append("mean")
-		ths_names.append("gauss")
+		ths_names.append("MEAN")
+		ths_names.append("GAUSS")
 
 	for i in range(len(ths_names)):	
 		# find contours in the thresholded image and initialize the shape detector	
@@ -100,7 +103,7 @@ def nothing(x):
 			# ============= is a square?
 			if len(polygon)==4:
 				imageTemp = blurSquares(imageTemp, c)				
-			drawContornos(imageTemp,c)	
+			# drawContornos(imageTemp,c)	
 
 		showImage(ths_names[i]+str(METODO),imageTemp)
 
@@ -146,22 +149,46 @@ def blurSquares(image, c):
 		if M["m00"] != float(0):
 			cX = int((M["m10"] / M["m00"]) * RATIO)
 			cY = int((M["m01"] / M["m00"]) * RATIO)
-	# if M["m00"]*RATIO >=100 and M["m00"]*RATIO <= 2000:
 		
-		image = blurRoi(image, x,y,x+w,y+h,31)
-		# DRAWING
-		cv2.rectangle(image,(x,y),(x+w,y+h),(253,240,47),2)
+		if M["m00"]*RATIO >=100 and M["m00"]*RATIO <= 2000:
+		
+			image = blurRoi(image, x, y, x+w, y+h, 31)
+			# DRAWING
+			cv2.rectangle(image, (x,y), (x+w,y+h), (253,240,47), 2)
 		# print("Polygon: {} Sides: {}".format(polygon, len(polygon)))
 		# DRAWING
 		# cv2.putText(image, "S: {:f}".format(ret), (cX-50, cY), cv2.FONT_HERSHEY_SIMPLEX, 
 		# 	0.5, (204,0,204), 1)
-		cv2.putText(image, "M: {:.3f}".format( M["m00"]*RATIO), (cX-50, cY+15), cv2.FONT_HERSHEY_SIMPLEX, 
-			0.5, (204,0,204), 1)
-		cv2.putText(image, "dx/dy: {}".format( w/h ), (cX-50, cY+30), cv2.FONT_HERSHEY_SIMPLEX, 
-			0.5, (204,0,204), 1)
+		# TEXT DRAWING
+		# cv2.putText(image, "M: {:.3f}".format( M["m00"]*RATIO), (cX-50, cY+15), cv2.FONT_HERSHEY_SIMPLEX, 
+		# 	0.5, (204,0,204), 1)
+		# cv2.putText(image, "dx/dy: {}".format( w/h ), (cX-50, cY+30), cv2.FONT_HERSHEY_SIMPLEX, 
+		# 	0.5, (204,0,204), 1)
 		# cv2.putText(image, "Sh: {}".format( len(polygon) ), (cX-50, cY+30), cv2.FONT_HERSHEY_SIMPLEX, 
 		# 	0.5, (204,0,204), 1)
 	return image
+
+def click_and_crop(event, x, y, flags, param):
+	# grab references to the global variables
+	global refPt, cropping
+ 
+	# if the left mouse button was clicked, record the starting
+	# (x, y) coordinates and indicate that click_and_croppping is being
+	# performed
+	if event == cv2.EVENT_LBUTTONDOWN:
+		refPt = [(x, y)]
+		cropping = True
+ 
+	# check to see if the left mouse button was released
+	elif event == cv2.EVENT_LBUTTONUP:
+		# record the ending (x, y) coordinates and indicate that
+		# the cropping operation is finished
+		refPt.append((x, y))
+		cropping = False
+ 
+		# draw a rectangle around the region of interest
+		cv2.rectangle(image, refPt[0], refPt[1], (0, 255, 0), 2)
+		cv2.imshow("image", image)
 
 def drawContornos(image, c):
 	cv2.drawContours(image, [c], -1, (0, 204, 0), 1)
@@ -180,17 +207,24 @@ def processImage(directory, imgSrc):
 	blurred = cv2.GaussianBlur(gray, (1, 1), 0)
 	
 	# ==== TEMP ==== to modify the image
-	cv2.namedWindow('thrsh', cv2.WINDOW_NORMAL)
+	cv2.namedWindow('Image Controllers', cv2.WINDOW_NORMAL)
 	# trackbar on the image
-	cv2.createTrackbar('threshold','thrsh',52,255,nothing)
-	cv2.createTrackbar('perimeter','thrsh',10,100,perimeterCallback)
+	cv2.createTrackbar('threshold','Image Controllers',52,255,nothing)
+	cv2.createTrackbar('perimeter','Image Controllers',10,100,perimeterCallback)
 
 	init(image, ratio, blurred)
 
 	while (1):
+
 		k = cv2.waitKey(0) & 0xff
+		print(imgSrc)
 		print(k)
 		if k == 27:
+			# Do nothing
+			break
+		if k == 13:
+			# Save the current state of the image
+			print("enter")
 			break
 	# imageTemp = image.copy()
 	# thresh = cv2.adaptiveThreshold(blurred,255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,treshVal,2)
@@ -222,7 +256,7 @@ def processImage(directory, imgSrc):
 
 	
 
-	# treshVal = cv2.getTrackbarPos('threshold','thrsh')
+	# treshVal = cv2.getTrackbarPos('threshold','Image Controllers')
 	# saveImage(directory+"-Final-"+str(METODO),image)
 
 def main():
