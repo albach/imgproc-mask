@@ -154,10 +154,16 @@ def click_and_crop(event, x, y, flags, param):
 		# the cropping operation is finished
 		refPt.append((x, y))
 		cropping = False
-		clone = IMG.copy()
+		# clone = IMG.copy()
+		# clone = IMG.copy()
 		# draw a rectangle around the region of interest
-		cv2.rectangle(clone, refPt[0], refPt[1], (0, 255, 0), 2)
-		cv2.imshow("imigy", clone)
+		# cv2.rectangle(IMG, refPt[0], refPt[1], (0, 255, 0), 2)
+		y = refPt[0][1]
+		x = refPt[0][0]
+		h = refPt[1][1]
+		w = refPt[1][0]
+		blurArea = blurRoi(IMG, x, y, w, h, 31)
+		cv2.imshow("imigy", blurArea)
 
 def drawContornos(image, c):
 	cv2.drawContours(image, [c], -1, (0, 204, 0), 1)
