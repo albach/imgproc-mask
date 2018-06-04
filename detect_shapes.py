@@ -3,7 +3,7 @@
 # python detect_shapes.py --image shapes_and_colors.png
 
 # import the necessary packages
-from pyimagesearch.shapedetector import ShapeDetector
+from blur.blurr import BlurWatermark
 import argparse
 import imutils
 import cv2
@@ -241,6 +241,21 @@ def main():
 	ap = argparse.ArgumentParser()
 	ap.add_argument("-f", "--folder", required=False,
 		help="path to the input image")
+	# args = vars(ap.parse_args())
+
+	# ============================== 
+	# ============ TODO ============ 
+	# ============================== 
+	# ap = argparse.ArgumentParser()
+	ap.add_argument("-p", "--prop", required=True,
+		help="path to the properties file containing the area points")
+	ap.add_argument("-k", "--kgauss", required=True,
+		help="parameter for the GaussianBlur minimum 1")
+	# # ap.add_argument("-i", "--image", required=False,
+	# # 	help="path to the input image")
+	# # ap.add_argument("-f", "--folder", required=False,
+	# # 	help="path to the input image")
+
 	args = vars(ap.parse_args())
 
 	# TODO: This is too complicated
@@ -263,8 +278,15 @@ def main():
 			    except Exception as e:
 			    	print(e)
 			    	print("[INFO] skipping image...")
+
+		bm = BlurWatermark(dirFol,args['prop'],args['kgauss'])
+		print("K gauus: {}".format(bm.k))
+		print("K gauus: {}".format(bm.folder))
+		print("K gauus: {}".format(bm.prop))
+		bm.startBlur()
+
 	else:
-		sys.exit("No arguments provided, either --image or --folder")
+		sys.exit("No arguments provided, either --folder, --prop or --kgauss ")
 
 
 if __name__ == '__main__':
