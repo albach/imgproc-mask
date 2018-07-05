@@ -263,7 +263,7 @@ def main():
 		dirFol = args['folder']
 		for file in os.listdir(dirFol):
 		    filename = os.fsdecode(file)
-		    if filename.endswith(".jpeg") or filename.endswith(".jpg"): 
+		    if filename.endswith(".jpeg") or filename.endswith(".jpg") or filename.endswith("png"): 
 			    imageName = filename.split('.')[0]
 			    try:
 			    	print("[INFO] processing image {}".format(imageName))
