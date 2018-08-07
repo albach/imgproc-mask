@@ -76,7 +76,7 @@ def prepareImage():
 		box = np.int0(box)
 		ret = cv2.matchShapes(box,c,METODO,0.0)
 		# ============= shape detect
-		polygon = shapeDetect(c, PERI);
+		polygon = shapeDetect(c, PERI)
 		# ============= end shape detect
 		
 		# ============= is a square?
@@ -170,7 +170,7 @@ def drawContornos(image, c):
 	# cv2.drawContours(image, [polygon], -1, (204, 0, 0), 2)
 
 def processImage(directory, imgSrc):
-	global imageName,finalSave;
+	global imageName,finalSave
 	# load the image and resize it to a smaller factor so that
 	# the shapes can be approximated better
 	image = cv2.imread(imgSrc)
