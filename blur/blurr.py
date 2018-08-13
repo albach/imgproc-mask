@@ -12,15 +12,17 @@ class BlurWatermark():
 		self.prop = propertyFile
 		self.folderName = imagesFolder
 		self.folder = "./MODS/"+"_"+imagesFolder
+		# properties field candidtate
+		self.output = "./output_img"
 		self.k = int(kgauss)
 
 	# def showImage(self, name, img):
 	# 	cv2.imshow(name, img)
 
 	def saveImage(self, name, img):
-		if not os.path.exists(self.folder+"/"+self.folderName):
-			os.makedirs(self.folder+"/"+self.folderName)
-		cv2.imwrite(self.folder+"/"+self.folderName+"/"+name+'.jpeg',img)
+		if not os.path.exists(self.output+"/"+self.folderName):
+			os.makedirs(self.output+"/"+self.folderName)
+		cv2.imwrite(self.output+"/"+self.folderName+"/"+name+'.jpeg',img)
 
 	def blurRoi(self, img, x1, y1, x2, y2, k):
 		# roi in the image First [y:y+dy, x:x+dx]
