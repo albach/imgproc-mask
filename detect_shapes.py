@@ -1,6 +1,6 @@
-#!/usr/bin/env python3
+#!~/.virtualenvs/env/bin python3
 # USAGE
-# python detect_shapes.py --image shapes_and_colors.png
+# python detect_shapes.py -f folder -p blur/propFile -k guassianblurvalue(oddNumber)
 
 # import the necessary packages
 from blur.blurr import BlurWatermark
@@ -31,10 +31,6 @@ def init(image, ratio, blur):
 	RATIO = ratio
 	IMG = image
 	BLUR = blur
-	# initialize the list of reference points and boolean indicating
-	# whether cropping is being performed or not
-	refPt = []
-	cropping = False
 
 def shapeDetect(contour, periparam):
 	per = periparam/1000
@@ -235,12 +231,11 @@ def main():
 	global finalSave
 	imageName = ''
 	finalSave = False
-	BASE = os.path.dirname(os.path.abspath(__file__))
-
+	
 	# construct the argument parse and parse the arguments
 	ap = argparse.ArgumentParser()
-	ap.add_argument("-f", "--folder", required=False,
-		help="path to the input image")
+	# ap.add_argument("-f", "--folder", required=False,
+	# 	help="path to the input image")
 	# args = vars(ap.parse_args())
 
 	# ============================== 
@@ -258,32 +253,41 @@ def main():
 
 	args = vars(ap.parse_args())
 
+	# Candidate to be in prop file
+	dirImgSourceFolder = './src_img'
+	
+	# [print(x[0]) for x in os.walk(dirImgSourceFolder)]
+	for file in os.listdir(dirImgSourceFolder):
+		print(file)
 	# TODO: This is too complicated
-	if args['folder']:
-		dirFol = args['folder']
-		for file in os.listdir(dirFol):
-		    filename = os.fsdecode(file)
-		    if filename.endswith(".jpeg") or filename.endswith(".jpg") or filename.endswith("png"): 
-			    imageName = filename.split('.')[0]
-			    try:
-			    	print("[INFO] processing image {}".format(imageName))
-			    	processImage(dirFol, os.path.join(dirFol, filename))
-			    # we are trying to control-c out of the script, so break from the
-				# loop (you still need to press a key for the active window to
-				# trigger this)
-			    except KeyboardInterrupt:
-			    	print("[INFO] manually leaving script")
-			    	break
-				# an unknown error has occurred for this particular image
-			    except Exception as e:
-			    	print(e)
-			    	print("[INFO] skipping image...")
+	if args['kgauss']:
+		for folder in os.listdir(dirImgSourceFolder):
+			dirFol = folder
+			print("preparing: ", dirFol)
+			for file in os.listdir(os.path.join(dirImgSourceFolder, dirFol)):
+				filename = os.fsdecode(file)
+				if filename.endswith(".jpeg") or filename.endswith(".jpg") or filename.endswith("png"):
+					imageName = filename.split('.')[0]
+					try:
+						print("[INFO] processing image {}".format(imageName))
+						print(os.path.join(dirImgSourceFolder, dirFol)+'/'+filename)
+						processImage(dirFol, os.path.join(dirImgSourceFolder, dirFol)+'/'+filename)
+					# we are trying to control-c out of the script, so break from the
+					# loop (you still need to press a key for the active window to
+					# trigger this)
+					except KeyboardInterrupt:
+						print("[INFO] manually leaving script")
+						break
+					# an unknown error has occurred for this particular image
+					except Exception as e:
+						print(e)
+						print("[INFO] skipping image...")
 
-		bm = BlurWatermark(dirFol,args['prop'],args['kgauss'])
-		print("K gauus: {}".format(bm.k))
-		print("K gauus: {}".format(bm.folder))
-		print("K gauus: {}".format(bm.prop))
-		bm.startBlur()
+			bm = BlurWatermark(dirFol,args['prop'],args['kgauss'])
+			print("K gauus: {}".format(bm.k))
+			print("K gauus: {}".format(bm.folder))
+			print("K gauus: {}".format(bm.prop))
+			bm.startBlur()
 
 	else:
 		sys.exit("No arguments provided, either --folder, --prop or --kgauss ")
