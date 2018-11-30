@@ -264,14 +264,33 @@ def main():
 		for folder in os.listdir(dirImgSourceFolder):
 			dirFol = folder
 			print("preparing: ", dirFol)
+			imgCounter = 0
 			for file in os.listdir(os.path.join(dirImgSourceFolder, dirFol)):
 				filename = os.fsdecode(file)
-				if filename.endswith(".jpeg") or filename.endswith(".jpg") or filename.endswith("png"):
+				routeToFile = os.path.join(dirImgSourceFolder, dirFol)
+				# Only files with specific ending
+				if filename.endswith(".jpeg") or filename.endswith(".jpg") or filename.endswith(".png"):
+					# Change name depending on ending
+					if filename.endswith(".jpeg"):
+						os.rename(routeToFile+'/'+filename,routeToFile+'/'+str(imgCounter)+'.jpeg')
+						# change filename relative name
+						filename = str(imgCounter)+".jpeg"
+					elif filename.endswith(".jpg"):
+						os.rename(routeToFile+'/'+filename,routeToFile+'/'+str(imgCounter)+'.jpg')
+						# change filename relative name
+						filename = str(imgCounter)+".jpg"
+					elif filename.endswith(".png"):
+						os.rename(routeToFile+'/'+filename,routeToFile+'/'+str(imgCounter)+'.png')
+						# change filename relative name
+						filename = str(imgCounter)+".png"
+					# Increase name variable
+					imgCounter = imgCounter + 1
+					# Only name
 					imageName = filename.split('.')[0]
 					try:
 						print("[INFO] processing image {}".format(imageName))
-						print(os.path.join(dirImgSourceFolder, dirFol)+'/'+filename)
-						processImage(dirFol, os.path.join(dirImgSourceFolder, dirFol)+'/'+filename)
+						print(routeToFile+'/'+filename)
+						processImage(dirFol, routeToFile+'/'+filename)
 					# we are trying to control-c out of the script, so break from the
 					# loop (you still need to press a key for the active window to
 					# trigger this)
